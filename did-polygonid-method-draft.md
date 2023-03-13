@@ -1,4 +1,4 @@
-# DID Method Specification
+# did:polygonid Method Specification
 
 Polygon ID - is an implementation of the [iden3 protocol](https://docs.iden3.io/protocol/spec/). The protocol is compatible with any Ethereum Virtual Machine (EVM) blockchain. Polygon ID aims to maximize the privacy of the identity holder by leveraging Zero Knowledge Proofs (ZKP) technology. The protocol enables users to generate ZK proof responses on Verifier request using the [ZK query language](https://0xpolygonid.github.io/tutorials/verifier/verification-library/zk-query-language/).
 
