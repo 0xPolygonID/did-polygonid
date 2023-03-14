@@ -18,7 +18,7 @@ The method identifier is composed of a network identifier (“polygon”) and a 
 
 The identity identifier is [iden3 specific identifier](https://docs.iden3.io/getting-started/identity/identifier/) that is permanent, unique, and deterministically calculated from [the Genesis ID](https://docs.iden3.io/protocol/spec/#genesis-id).
 
-```json
+```
 polygonid-did = "did:polygonid:" polygonid-specific-idstring
 polygonid-specific-idstring = [polygonid-networkID ":" polygonid-network] polygonid-identifier
 polygonid-networkID = "polygon"
@@ -30,7 +30,7 @@ polygonid-identifier = *32HEXDIG
 
 A valid polygonid DID:
 
-```json
+```
 did:polygonid:polygon:mumbai:2qCU58EJgrELNZCDkSU23dQHZsBgAFWLNpNezo1g6b
 did:polygonid:polygon:main:2pzr1wiBm3Qhtq137NNPPDFvdk5xwRsjDFnMxpnYHm
 did:polygonid:2mbH5rt9zKT1mTivFAie88onmfQtBU9RQhjNPLwFZh // readonly
@@ -84,13 +84,13 @@ The polygonid did method uses additional JSON-LD types.
 
 The JSON-LD vocabulary is stored in:
 
-```jsx
+```
 https://schema.iden3.io/core/jsonld/auth.jsonld
 ```
 
 Context contains `AuthBJJCredential`(Operational key)  and `Iden3StateInfo2023` types.
 
-```json
+```
 https://schema.iden3.io/core/jsonld/iden3proofs.jsonld
 ```
 
@@ -120,9 +120,9 @@ When an identity revokes all the `claims`of the type `operational key authoriz
 
 ### Resolve
 
-[Abstract algorithm for resolve (read).](https://www.w3.org/TR/did-core/#resolution)
+Abstract algorithm for resolving [(read operation).](https://www.w3.org/TR/did-core/#resolution)
 
-Contract address for resolve did (mumbai network): `0x134B1BE34911E39A8397ec6289782989729807a4`
+Contract address for resolving the did (mumbai network): `0x134B1BE34911E39A8397ec6289782989729807a4`
 
 `PolygonID did driver` accepts DID in URI format. Currently, we support three URI formats:
 
@@ -130,18 +130,17 @@ Contract address for resolve did (mumbai network): `0x134B1BE34911E39A8397ec6289
 2. `did:polygonid:polygon:mumbai:2qHaobUk3dBVCkox8HtJezfWLDnGrBPufieEJ5A5o8?state=<hex_of_state>`
 3. `did:polygonid:polygon:mumbai:2qHaobUk3dBVCkox8HtJezfWLDnGrBPufieEJ5A5o8?gist=<hex_of_gist_state>`
 Each of these formats has a different `read` algorithm. But they all have a certain common logic of presentation.
-4. Common steps for all formats of DID.
-1.1 Get a method from DID (`polygonid|iden3`).
-1.2 Get a blockchain name from DID (`polygon|eth`).
-1.2 Get chain ID from DID. For `polygon` chain we support `main|mumbai` networks for `eth` chain `main|goerly` networks).
-1.3 Verify data that was encoded on the identification (`2qHaobUk3dBVCkox8HtJezfWLDnGrBPufieEJ5A5o8`) matches on parsed DID info.
-1.4 Find resolver by pair of chain name and blockchain id.
-5. 
-5.1 `Read` operation for the simple format of DID (`did:polygonid:polygon:mumbai:2qHaobUk3dBVCkox8HtJezfWLDnGrBPufieEJ5A5o8`). This format means that the resolver should read the latest information about ID and GIST from the contract. If ID is the genesis one or doesn't exist on the contract, resolver will return only GIST info.
-    5.1.1 Call `getGISTRoot` from the contract to get the latest GIST state.
-    5.1.2 Call `getGISTRootInfo` with GIST from the step above to get the latest information about GIST.
-    5.1.3 Call `getStateInfoById` with the user ID to get the latest information about the user’s state. If not exist return an empty object
-    
+4. Common steps for all formats of DID.<br/>
+1.1 Get a method from DID (`polygonid|iden3`).<br/>
+1.2 Get a blockchain name from DID (`polygon|eth`).<br/>
+1.2 Get chain ID from DID. For `polygon` chain we support `main|mumbai` networks for `eth` chain `main|goerly` networks).<br/>
+1.3 Verify data that was encoded on the identification (`2qHaobUk3dBVCkox8HtJezfWLDnGrBPufieEJ5A5o8`) matches on parsed DID info.<br/>
+1.4 Find resolver by pair of chain name and blockchain id.<br/>
+5. Step 5:<br/>
+5.1 `Read` operation for the simple format of DID (`did:polygonid:polygon:mumbai:2qHaobUk3dBVCkox8HtJezfWLDnGrBPufieEJ5A5o8`). This format means that the resolver should read the latest information about ID and GIST from the contract. If ID is the genesis one or doesn't exist on the contract, resolver will return only GIST info.<br/>
+    5.1.1 Call `getGISTRoot` from the contract to get the latest GIST state.<br/>
+    5.1.2 Call `getGISTRootInfo` with GIST from the step above to get the latest information about GIST.<br/>
+    5.1.3 Call `getStateInfoById` with the user ID to get the latest information about the user’s state. If it does not exist return an empty object<br/>
     ```json
     "info": {
         "id": "did:polygonid:polygon:mumbai:2qHaobUk3dBVCkox8HtJezfWLDnGrBPufieEJ5A5o8",
@@ -161,31 +160,25 @@ Each of these formats has a different `read` algorithm. But they all have a cert
         "replacedAtBlock": "0"
     }
     ```
-    
-
-5.2 `did...#state=<state>` Resolve DID document by committed `state`. In some cases, we should get historical DID to validate the information that was replaced at the current time. Since we can’t get GIST by the user’s ID, global info will not exist in the resolution document.
-    5.2.1 Call `getStateInfoByState` from the contract to get information about the user’s state by state.
-
-    5.2.2 Verify that this state is the user’s state.
-
+5.2 `did...#state=<state>` Resolve DID document by committed `state`. In some cases, we should get historical DID to validate the information that was replaced at the current time. Since we can’t get GIST by the user’s ID, global info will not exist in the resolution document.<br/>
+    5.2.1 Call `getStateInfoByState` from the contract to get information about the user’s state by state.<br/>
+    5.2.2 Verify that this state is the user’s state.<br/>
 ```json
-"info": {
-  "id": "did:polygonid:polygon:mumbai:2qHaobUk3dBVCkox8HtJezfWLDnGrBPufieEJ5A5o8",
-  "state": "0a4f612419d84ca6ddaa377ec3f2411aba4bc6a3caac6996bc726790a0693424",
-  "replacedByState": "0000000000000000000000000000000000000000000000000000000000000000",
-  "createdAtTimestamp": "1677692829",
-  "replacedAtTimestamp": "0",
-  "createdAtBlock": "32582803",
-  "replacedAtBlock": "0"
-}
+    "info": {
+      "id": "did:polygonid:polygon:mumbai:2qHaobUk3dBVCkox8HtJezfWLDnGrBPufieEJ5A5o8",
+      "state": "0a4f612419d84ca6ddaa377ec3f2411aba4bc6a3caac6996bc726790a0693424",
+      "replacedByState": "0000000000000000000000000000000000000000000000000000000000000000",
+      "createdAtTimestamp": "1677692829",
+      "replacedAtTimestamp": "0",
+      "createdAtBlock": "32582803",
+      "replacedAtBlock": "0"
+    }
 ```
-
- 5.3 `did...#gist=<state>` Resolve state by gist state. Identities can exist under a global state for increased security and anonymity. In some cases, we should understand that exists or not exists some user cases under the global target state.
-    5.3.1 Call `getGISTProofByRoot` with GIST root (key) and users ID (value), for get exist or not exist proof.
-    5.3.2 Call `getGISTRootInfo` with `root` from the step above to get GIST information.
-    5.3.3 If the proof has `exists = true`, execute next state. If `exists = false` return information only about GIST state.
-    5.3.4 Call `getStateInfoByState` with the value from proof to return information about the user’s state.
-
+ 5.3 `did...#gist=<state>` Resolve state by gist state. Identities can exist under a global state for increased security and anonymity. In some cases, we should understand that it may exist or not exist for some user cases under the global target state.<br/>
+    5.3.1 Call `getGISTProofByRoot` with GIST root (key) and users ID (value), for get exist or not exist proof.<br/>
+    5.3.2 Call `getGISTRootInfo` with `root` from the step above to get GIST information.<br/>
+    5.3.3 If the proof has `exists = true`, execute the next state. If `exists = false` return information only about GIST state.<br/>
+    5.3.4 Call `getStateInfoByState` with the value from proof to return information about the user’s state.<br/>
 ```json
 "info": {
     "id": "did:polygonid:polygon:mumbai:2qHaobUk3dBVCkox8HtJezfWLDnGrBPufieEJ5A5o8",
@@ -209,32 +202,28 @@ Each of these formats has a different `read` algorithm. But they all have a cert
 JSON result description: [https://github.com/iden3/claim-schema-vocab/blob/main/core/vocab/state-info.md](https://github.com/iden3/claim-schema-vocab/blob/main/core/vocab/state-info.md)
 
 6. Build representation document:
-
-After fetching the gist and the user’s state is possible to build a [representation document](https://www.notion.so/DID-document-in-iden3-protocol-d8fe6642c4d24cd6a111c934da13c603). 
-  6.1 Create an object with the next fields:
-
-```json
-struct {
-	id
-	type
-	blockchainAccountId
-  published
-  latest
-  global
-}
-```
-
-  6.2 In the `latest` field, put information about the user’s state. In the `global` field, put information about the GIST state.
-
+After fetching the gist and the user’s state it is possible to build a [representation document](https://www.notion.so/DID-document-in-iden3-protocol-d8fe6642c4d24cd6a111c934da13c603).<br/>
+  6.1 Create an object with the following fields:
+    ```
+    struct {
+       id
+       type
+       blockchainAccountId
+       published
+       latest
+       global
+    }
+    ```
+  6.2 In the `latest` field, put information about the user’s state. In the `global` field, put information about the GIST state.<br/>
   6.3 Fill `id` filed in the following format `<did>#state=<requested_state|latest_state>`.
         `requested_state` - use the `state` from the request if the request had `#sate=...`
-        `latest_state` - use the state from the resolver response
-  6.4 Add `Iden3StateInfo` type to `type` field.
-  6.5 Fill `blockchainAccountId` in the following format  `<chain_id>:<resolver_contract>`.
-  6.6 Set `true` in `published` if the user’s state was been published to the smart contract.
-  6.7 Create an array `authentication` and put the struct from step 6.1 in this array.
-  6.8 Put the array `authentication` to `didDocument`. Also, add `@context: ["https://www.w3.org/ns/did/v1", "`https://schema.iden3.io/core/jsonld/auth.jsonld`"]` to this `didDocument`.
-  6.9 Build representation:
+        `latest_state` - use the state from the resolver response.<br/>
+  6.4 Add `Iden3StateInfo` type to `type` field.<br/>
+  6.5 Fill `blockchainAccountId` in the following format  `<chain_id>:<resolver_contract>`.<br/>
+  6.6 Set `true` in `published` if the user’s state was been published to the smart contract.<br/>
+  6.7 Create an array `authentication` and put the struct from step 6.1 in this array.<br/>
+  6.8 Put the array `authentication` to `didDocument`. Also, add `@context: ["https://www.w3.org/ns/did/v1", "https://schema.iden3.io/core/jsonld/auth.jsonld"]` to this `didDocument`.<br/>
+  6.9 Build representation:<br/>
 
 ```json
 {
@@ -271,7 +260,7 @@ The syntax and construction of the Polygon ID DID and its associated DID Documen
 
 - Only the state of identity is required to be published on-chain. In case of on-chain identity all the data will be available in the smart-contract.
 - Identifiers in Polygon ID do not reveal specific personal information about the identity holder, and the holder can choose to have unique random identifiers for each new interaction with verifiers.
-- We also implemented zero-knowledge proofs such that interactions between the user and verifier reveal the minimal amount of data possible. ~~We encourage implementers to prioritize this method (as opposed to selective disclosure of credential data) as much as possible.~~
+- We also implemented zero-knowledge proofs such that interactions between the user and verifier reveal the minimal amount of data possible.
 
 **Additional Privacy and Security Recommendations:**
 
