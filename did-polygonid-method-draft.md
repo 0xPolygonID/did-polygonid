@@ -16,14 +16,16 @@ Per the DID specification, this string MUST be in lowercase. The remainder of th
 
 The method identifier is composed of a network identifier (“polygon”) and a specific identifier inside the network, such as "main", “mumbai” in Polygon network.
 
-The identity identifier is [iden3 specific identifier](https://docs.iden3.io/getting-started/identity/identifier/) that is permanent, unique, and deterministically calculated from [the Genesis ID](https://docs.iden3.io/protocol/spec/#genesis-id).
+The identity identifier is base58 encoded [iden3 specific identifier](https://docs.iden3.io/getting-started/identity/identifier/) that is permanent, unique, and deterministically calculated from [the Genesis ID](https://docs.iden3.io/protocol/spec/#genesis-id).
+
+There is a special case when identity is not linked to any network. That means that identity cannot change it's state and because of this it's marked as "readonly".
 
 ```
 polygonid-did = "did:polygonid:" polygonid-specific-idstring
-polygonid-specific-idstring = [polygonid-networkID ":" polygonid-network] polygonid-identifier
-polygonid-networkID = "polygon"
-polygonid-network = "main" / "mumbai"
-polygonid-identifier = *32HEXDIG
+polygonid-specific-idstring = [polygonid-blockchain ":" polygonid-networkID ":" ] polygonid-identifier
+polygonid-blockchain = "polygon" / "eth" / "readonly"
+polygonid-networkID = "main" / "mumbai" / "goerli"
+polygonid-identifier = 42*43 BASE58
 ```
 
 ### Example
@@ -31,9 +33,9 @@ polygonid-identifier = *32HEXDIG
 A valid polygonid DID:
 
 ```
-did:polygonid:polygon:mumbai:2qCU58EJgrELNZCDkSU23dQHZsBgAFWLNpNezo1g6b
 did:polygonid:polygon:main:2pzr1wiBm3Qhtq137NNPPDFvdk5xwRsjDFnMxpnYHm
-did:polygonid:2mbH5rt9zKT1mTivFAie88onmfQtBU9RQhjNPLwFZh // readonly
+did:polygonid:polygon:mumbai:2qCU58EJgrELNZCDkSU23dQHZsBgAFWLNpNezo1g6b
+did:polygonid:readonly:2mbH5rt9zKT1mTivFAie88onmfQtBU9RQhjNPLwFZh // readonly
 ```
 
 ## DID Document
@@ -98,25 +100,25 @@ Context contains `Iden3SparseMerkleTreeProof` and `BJJSignature2021` proofs type
 
 ## Basic operations
 
-Each identity has a unique DID that is determined by the initial identity state (hash of its Merkle Tree Roots). This identifier is called `[Genesis ID](https://docs.iden3.io/protocol/spec/#genesis-id)`, under which the initial claims are placed (those that are contained in the initial state of the identity).
+Each identity has a unique DID that is determined by the initial identity state (hash of its Merkle Tree Roots). This identifier is called `[Genesis ID](https://docs.iden3.io/protocol/spec/#genesis-id)`, under which the initial claims are placed (those that are contained in the initial state of the identity).
 
 ### Create
 
-The creation of the identity is done by creating a [Genesis ID](https://docs.iden3.io/protocol/spec/#genesis-id). While an identity does not add, update or revoke claims after the Genesis State, its identity state does not need to be published on the blockchain, and the `Genesis Claims` can be verified directly against the `Genesis ID`. This is because the Genesis ID is built by the Merkle Root that holds those claims.
+The creation of the identity is done by creating a [Genesis ID](https://docs.iden3.io/protocol/spec/#genesis-id). While an identity does not add, update or revoke claims after the Genesis State, its identity state does not need to be published on the blockchain, and the `Genesis Claims` can be verified directly against the `Genesis ID`. This is because the Genesis ID is built by the Merkle Root that holds those claims.
 
 ### State transition (Update)
 
-Adding new claims (claim statements or key claims), updating them through versions and revoking need to be done according to the identity [state transition function](https://docs.iden3.io/protocol/spec/#identity-state-transition-function).
-To ensure this, we use zero-knowledge proofs in a way that when an identity is publishing a new state to the smart contract, it also sends a zero-knowledge proof, proving that it is satisfied following the protocol rules.
+Adding new claims (claim statements or key claims), updating them through versions and revoking need to be done according to the identity [state transition function](https://docs.iden3.io/protocol/spec/#identity-state-transition-function).
+To ensure this, we use zero-knowledge proofs in a way that when an identity is publishing a new state to the smart contract, it also sends a zero-knowledge proof, proving that it is satisfied following the protocol rules.
 
 **Deactivate**
 
-When an identity revokes all the `claims`of the type `operational key authorization`, it is considered [deactivated](https://docs.iden3.io/protocol/spec/#identity-revocation) as this identity can no longer create proofs.
+When an identity revokes all the `claims` of the type `operational key authorization`, it is considered [deactivated](https://docs.iden3.io/protocol/spec/#identity-revocation) as this identity can no longer create proofs.
 
 ### Type of identity
 
 - *Regular* - identity generated by the user or organization off-chain
-- *On-chain identity* - identity created and managed by a smart contract. This type of identities can behave as on-chain issuer. Allowing any dAPP to issue credentials to it’s users in a trustless  manner.
+- *On-chain identity* - identity created and managed by a smart contract. This type of identities can behave as on-chain issuer. Allowing any dAPP to issue credentials to it’s users in a trustless manner.
 
 ### Resolve
 
@@ -202,7 +204,7 @@ Each of these formats has a different `read` algorithm. But they all have a cert
 JSON result description: [https://github.com/iden3/claim-schema-vocab/blob/main/core/vocab/state-info.md](https://github.com/iden3/claim-schema-vocab/blob/main/core/vocab/state-info.md)
 
 6. Build representation document:
-After fetching the gist and the user’s state it is possible to build a [representation document](https://www.notion.so/DID-document-in-iden3-protocol-d8fe6642c4d24cd6a111c934da13c603).<br/>
+After fetching the gist and the user’s state it is possible to build a representation document.<br/>
   6.1 Create an object with the following fields:
     ```
     struct {
@@ -248,11 +250,11 @@ Eavesdropping attacks need to be mitigated by the usage of a secure communicatio
 
 **Cryptographic Agility**
 
-The Polygon ID DID method supports EDDSA on the [Baby JubJub curve](https://github.com/iden3/iden3-docs/blob/master/source/docs/Baby-Jubjub.pdf) and [Sparse Merkle Tree](https://docs.iden3.io/protocol/spec/#merkle-tree) Proofs for the “signing” of credentials. For the generation of the zero knowledge proofs we use zkSNARKs with the Groth16 proving scheme. We may add other “signing” and “proving” algorithms in the future. In addition, once good post quantum cryptography becomes more widely available extending Polygon ID to support that will also be possible.
+The Polygon ID DID method supports EDDSA on the [Baby JubJub curve](https://github.com/iden3/iden3-docs/blob/master/source/docs/Baby-Jubjub.pdf) and [Sparse Merkle Tree](https://docs.iden3.io/protocol/spec/#merkle-tree) Proofs for the “signing” of credentials. For the generation of the zero knowledge proofs we use zkSNARKs with the Groth16 proving scheme. We may add other “signing” and “proving” algorithms in the future.
 
 **Keep DID Keys safe**
 
-The DID method includes support for key rotation, however if the key is compromised then the attacker may rotate keys, and block the original owner from making any changes. Care should be used when handling private keys.
+The DID method includes support for key rotation, however if the key is compromised then an attacker may rotate keys, and block the original owner from making any changes. Care should be used when handling private keys.
 
 **Keep personal data safe**
 
@@ -266,10 +268,10 @@ The syntax and construction of the Polygon ID DID and its associated DID Documen
 
 Implementers are strongly encouraged to review the following: 
 
-- The Privacy Considerations section of the DID Implementation Guide: [https://w3c.github.io/did-imp-guide/#privacy-considerations](https://w3c.github.io/did-imp-guide/#privacy-considerations).
-- The Privacy Considerations section of the Decentralized Identifiers (DIDs) (DID-CORE) specification: [https://www.w3.org/TR/did-core/#privacy-considerations](https://www.w3.org/TR/did-core/#privacy-considerations).
-- The Privacy Considerations section of the DID Implementation Guide: [https://w3c.github.io/did-imp-guide/#privacy-considerations](https://w3c.github.io/did-imp-guide/#privacy-considerations).
-- The Privacy Considerations section of the Decentralized Identifiers (DIDs) (DID-CORE) specification: [https://www.w3.org/TR/did-core/#privacy-considerations](https://www.w3.org/TR/did-core/#privacy-considerations).
+- The Privacy Considerations section of the DID Implementation Guide: [https://w3c.github.io/did-imp-guide/#privacy-considerations](https://w3c.github.io/did-imp-guide/#privacy-considerations).
+- The Privacy Considerations section of the Decentralized Identifiers (DIDs) (DID-CORE) specification: [https://www.w3.org/TR/did-core/#privacy-considerations](https://www.w3.org/TR/did-core/#privacy-considerations).
+- The Privacy Considerations section of the DID Implementation Guide: [https://w3c.github.io/did-imp-guide/#privacy-considerations](https://w3c.github.io/did-imp-guide/#privacy-considerations).
+- The Privacy Considerations section of the Decentralized Identifiers (DIDs) (DID-CORE) specification: [https://www.w3.org/TR/did-core/#privacy-considerations](https://www.w3.org/TR/did-core/#privacy-considerations).
 
 ---
 
