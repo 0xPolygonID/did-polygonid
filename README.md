@@ -2,6 +2,6 @@
 
 This repository contains the `did:polygonid` DID Method Specification.
 
-Initial draft of the specification is available
-[Specification draft](did-polygonid-method-draft.md).
+The specification is available here:
+[Polygon ID DID Method specification](did-polygonid-method.md).
 
